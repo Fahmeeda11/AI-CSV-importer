@@ -1,0 +1,21 @@
+# Render Blueprint for the backend API.
+# Deploy the frontend separately on Vercel (see README) and set its
+# NEXT_PUBLIC_API_URL to this service's URL.
+services:
+  - type: web
+    name: groweasy-csv-importer-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: ALLOWED_ORIGIN
+        sync: false

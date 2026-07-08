@@ -1,0 +1,5 @@
+created_time,full_name,email,phone_number,campaign_name,city,ad_status
+2026-05-13T14:20:48+05:30,John Doe,john.doe@example.com,+91 98765 43210,leads_on_demand,Mumbai,GOOD_LEAD_FOLLOW_UP
+2026-05-13T14:25:30+05:30,Sarah Johnson,sarah.johnson@example.com;sarah.j@work.com,+91 98765 43211,leads_on_demand,Bangalore,DID_NOT_CONNECT
+2026-05-13T14:30:15+05:30,Rajesh Patel,rajesh.patel@example.com,+91 98765 43212 / +91 90000 11111,leads_on_demand,Delhi,BAD_LEAD
+2026-05-13T14:35:22+05:30,Priya Singh,priya.singh@example.com,+91 98765 43213,leads_on_demand,Pune,SALE_DONE
