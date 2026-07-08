@@ -59,7 +59,7 @@ export function normalizeRecord(
   }
 
   // --- Closed enums ---
-  record.crm_status = coerceEnum(record.crm_status, CRM_STATUS_VALUES);
+  record.crm_status = coerceStatus(record.crm_status);
   record.data_source = coerceEnum(record.data_source, DATA_SOURCE_VALUES);
 
   // --- Date must be JS-parseable, else blank ---
@@ -68,8 +68,8 @@ export function normalizeRecord(
   // --- Country code sanity: keep a leading + and digits ---
   record.country_code = normalizeCountryCode(record.country_code);
 
-  // --- Fold extras into crm_note ---
-  record.crm_note = joinNote(record.crm_note, noteExtras);
+  // --- Fold extras into crm_note (and drop empty "Label:" fragments) ---
+  record.crm_note = cleanNote(joinNote(record.crm_note, noteExtras));
 
   // --- CSV-safety: collapse newlines to the literal escape "\n" ---
   for (const field of CRM_FIELDS) {
@@ -130,6 +130,44 @@ function coerceEnum<T extends readonly string[]>(value: string, allowed: T): str
   return match ?? "";
 }
 
+/** Common status phrasings mapped onto the four allowed CRM statuses. */
+const STATUS_SYNONYMS: Record<string, string> = {
+  NOT_CONNECTED: "DID_NOT_CONNECT",
+  COULD_NOT_CONNECT: "DID_NOT_CONNECT",
+  NO_RESPONSE: "DID_NOT_CONNECT",
+  NO_ANSWER: "DID_NOT_CONNECT",
+  UNREACHABLE: "DID_NOT_CONNECT",
+  NOT_REACHABLE: "DID_NOT_CONNECT",
+  RINGING: "DID_NOT_CONNECT",
+  BUSY: "DID_NOT_CONNECT",
+  GOOD_LEAD: "GOOD_LEAD_FOLLOW_UP",
+  FOLLOW_UP: "GOOD_LEAD_FOLLOW_UP",
+  INTERESTED: "GOOD_LEAD_FOLLOW_UP",
+  HOT_LEAD: "GOOD_LEAD_FOLLOW_UP",
+  WARM_LEAD: "GOOD_LEAD_FOLLOW_UP",
+  NOT_INTERESTED: "BAD_LEAD",
+  JUNK: "BAD_LEAD",
+  JUNK_LEAD: "BAD_LEAD",
+  INVALID: "BAD_LEAD",
+  LOST: "BAD_LEAD",
+  CLOSED: "SALE_DONE",
+  CLOSED_WON: "SALE_DONE",
+  WON: "SALE_DONE",
+  SOLD: "SALE_DONE",
+  BOOKED: "SALE_DONE",
+  DEAL_CLOSED: "SALE_DONE",
+  CONVERTED: "SALE_DONE",
+};
+
+/** Coerce a status: exact allowed value, then a known synonym, else blank. */
+function coerceStatus(value: string): string {
+  const exact = coerceEnum(value, CRM_STATUS_VALUES);
+  if (exact) return exact;
+  if (!value) return "";
+  const normalized = value.trim().toUpperCase().replace(/[\s-]+/g, "_");
+  return STATUS_SYNONYMS[normalized] ?? "";
+}
+
 /** Keep the original string if `new Date()` accepts it; otherwise blank. */
 export function normalizeDate(value: string): string {
   if (!value) return "";
@@ -147,6 +185,15 @@ function normalizeCountryCode(value: string): string {
 function joinNote(existing: string, extras: string[]): string {
   const parts = [existing.trim(), ...extras].filter(Boolean);
   return parts.join(" | ");
+}
+
+/** Drop note fragments that are just an empty label like "Alt Phone:". */
+function cleanNote(note: string): string {
+  return note
+    .split(/\s*\|\s*/)
+    .map((s) => s.trim())
+    .filter((s) => s && !/^[A-Za-z][\w .-]*:\s*$/.test(s))
+    .join(" | ");
 }
 
 function escapeNewlines(value: string): string {

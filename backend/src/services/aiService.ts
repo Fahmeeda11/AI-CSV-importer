@@ -128,18 +128,25 @@ MAPPING RULES:
    "E-mail"/"Email Address" -> email; "Org"/"Business" -> company; "Region"/"Province" -> state;
    "Source"/"Channel"/"Campaign" -> data_source; "Remarks"/"Comments"/"Notes" -> crm_note;
    "Owner"/"Agent"/"Assigned To" -> lead_owner; "Created"/"Date"/"Timestamp" -> created_at.
-2. crm_status MUST be exactly one of: ${CRM_STATUS_VALUES.join(", ")}. If the row's status does
-   not clearly match one of these, output "".
+2. crm_status MUST be exactly one of: ${CRM_STATUS_VALUES.join(", ")}. Map common phrasings by
+   meaning: "Not Connected"/"No Response"/"Unreachable"/"Busy"/"Ringing" -> DID_NOT_CONNECT;
+   "Good Lead"/"Interested"/"Hot"/"Follow up" -> GOOD_LEAD_FOLLOW_UP; "Not Interested"/"Junk"/
+   "Invalid"/"Lost" -> BAD_LEAD; "Sale Done"/"Closed"/"Won"/"Booked"/"Sold"/"Converted" ->
+   SALE_DONE. If it still does not clearly match, output "".
 3. data_source MUST be exactly one of: ${DATA_SOURCE_VALUES.join(", ")}. If none matches
    confidently, output "".
 4. created_at MUST be a string parseable by JavaScript's \`new Date()\` (ISO-8601 preferred). If
    the source date is ambiguous or unparseable, output "".
 5. Split combined values sensibly: if a phone value includes a country code, put it in
    country_code (e.g. "+91") and the rest in mobile_without_country_code.
-6. If a row has MULTIPLE emails, put the first in email and note the rest.
-   If a row has MULTIPLE phone numbers, put the first in mobile_without_country_code and note the rest.
-7. crm_note collects remarks, follow-up notes, extra emails/phones, and any useful information
-   that does not fit another field.
+6. Gather ALL emails and ALL phone numbers from EVERY column of the row (including columns like
+   "Alt Phone", "Secondary Email", "WhatsApp", etc.). Use the FIRST email in \`email\` and the
+   FIRST phone in \`mobile_without_country_code\`. Append every REMAINING email/phone VERBATIM to
+   crm_note, e.g. "Additional mobile: 9812340000" or "Additional email: x@y.com". Do NOT summarise
+   them as "two emails on file" — include the actual values. If a secondary column is empty,
+   add nothing (never output an empty label like "Alt Phone:").
+7. crm_note collects remarks, follow-up notes, the extra emails/phones from rule 6, and any useful
+   information that does not fit another field.
 8. Keep every value on a single line — replace any internal newlines with a space or "\\n".
 9. Do NOT invent data. Only map what is present in the row.
 

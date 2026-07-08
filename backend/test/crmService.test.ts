@@ -55,6 +55,23 @@ describe("normalizeRecord", () => {
     expect(res.record.crm_status).toBe("SALE_DONE");
   });
 
+  it("maps common status synonyms to allowed values", () => {
+    const cases: Array<[string, string]> = [
+      ["Not Connected", "DID_NOT_CONNECT"],
+      ["No Response", "DID_NOT_CONNECT"],
+      ["Good Lead", "GOOD_LEAD_FOLLOW_UP"],
+      ["Interested", "GOOD_LEAD_FOLLOW_UP"],
+      ["Not Interested", "BAD_LEAD"],
+      ["Closed Won", "SALE_DONE"],
+      ["Booked", "SALE_DONE"],
+    ];
+    for (const [input, expected] of cases) {
+      const res = normalizeRecord(makeAi({ email: "a@b.com", crm_status: input }), raw, 0);
+      if (res.kind !== "record") throw new Error("expected record");
+      expect(res.record.crm_status, `${input} -> ${expected}`).toBe(expected);
+    }
+  });
+
   it("coerces an unknown data_source to blank", () => {
     const res = normalizeRecord(makeAi({ email: "a@b.com", data_source: "instagram" }), raw, 0);
     if (res.kind !== "record") throw new Error("expected record");
@@ -95,6 +112,20 @@ describe("normalizeRecord", () => {
     );
     if (good.kind !== "record") throw new Error("expected record");
     expect(Number.isNaN(new Date(good.record.created_at).getTime())).toBe(false);
+  });
+
+  it("drops empty label fragments from crm_note", () => {
+    const res = normalizeRecord(makeAi({ email: "a@b.com", crm_note: "Alt Phone:" }), raw, 0);
+    if (res.kind !== "record") throw new Error("expected record");
+    expect(res.record.crm_note).toBe("");
+
+    const kept = normalizeRecord(
+      makeAi({ email: "a@b.com", crm_note: "Alt Phone: 9812340000" }),
+      raw,
+      0
+    );
+    if (kept.kind !== "record") throw new Error("expected record");
+    expect(kept.record.crm_note).toBe("Alt Phone: 9812340000");
   });
 
   it("escapes newlines so the record stays one CSV row", () => {
