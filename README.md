@@ -27,6 +27,20 @@ Upload CSV ──▶ Preview (client-side parse, no AI) ──▶ Confirm ──
 5. **Results** — imported records and skipped records in separate tables, with summary
    stats and a one-click **Download CRM CSV**.
 
+### Review & override
+
+The results step is built for human-in-the-loop correction:
+
+- **Confidence score** — the AI returns a 0–100 confidence per record, shown as a
+  color-coded badge (green ≥80 / amber 50–79 / red <50) plus an average-confidence stat,
+  so you can spot rows worth double-checking.
+- **Manual override** — every field is editable inline; `crm_status` and `data_source` are
+  color-coded dropdowns constrained to the allowed values. Edits flow straight into the
+  CSV export.
+- **Recover skipped rows** — a skipped lead keeps its AI mapping; add an email or mobile
+  and click **Recover** to move it into the import (counts update live).
+- **Color coding** — status, source, and confidence are colored throughout, with a legend.
+
 ---
 
 ## Architecture
