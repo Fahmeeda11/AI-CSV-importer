@@ -8,7 +8,7 @@ business rules hold.
 
 > **Position applied for:** Software Developer Intern
 
-**Live app:** _add your Vercel URL here_ · **API:** _add your Render URL here_
+**Live app:** https://ai-csv-importer-eta.vercel.app · **API:** https://groweasy-csv-importer-api-rlgs.onrender.com
 
 ---
 
