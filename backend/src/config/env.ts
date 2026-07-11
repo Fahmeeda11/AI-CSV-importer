@@ -38,8 +38,10 @@ export const env = parsed.data;
 /** Whether the AI provider is configured and usable. */
 export const isAiConfigured = (): boolean => Boolean(env.OPENAI_API_KEY);
 
-/** Parsed list of allowed CORS origins ("*" means allow any). */
-export const allowedOrigins =
-  env.ALLOWED_ORIGIN === "*"
-    ? "*"
-    : env.ALLOWED_ORIGIN.split(",").map((o) => o.trim()).filter(Boolean);
+/** Parsed list of allowed CORS origins ("*" or blank means allow any). */
+export const allowedOrigins: "*" | string[] = (() => {
+  const raw = env.ALLOWED_ORIGIN.trim();
+  if (raw === "" || raw === "*") return "*";
+  const list = raw.split(",").map((o) => o.trim()).filter(Boolean);
+  return list.length > 0 ? list : "*";
+})();

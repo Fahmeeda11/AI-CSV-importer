@@ -4,6 +4,9 @@
   "description": "AI-powered CSV importer backend (Express + TypeScript) that maps arbitrary CSVs into the GrowEasy CRM schema.",
   "type": "module",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.build.json",

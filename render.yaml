@@ -7,7 +7,8 @@ services:
     runtime: node
     rootDir: backend
     plan: free
-    buildCommand: npm ci && npm run build
+    # --include=dev so TypeScript is available for the build even though NODE_ENV=production.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run start
     healthCheckPath: /health
     envVars:
@@ -17,5 +18,6 @@ services:
         sync: false
       - key: OPENAI_MODEL
         value: gpt-4o-mini
+      # Defaults to allow-all; tighten to your Vercel URL once the frontend is deployed.
       - key: ALLOWED_ORIGIN
-        sync: false
+        value: "*"
