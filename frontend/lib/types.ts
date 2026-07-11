@@ -27,10 +27,34 @@ export type CrmRecord = Record<CrmField, string>;
 
 export type RawRow = Record<string, string>;
 
+/** Allowed closed-enum values (mirror of the backend domain). */
+export const CRM_STATUS_VALUES = [
+  "GOOD_LEAD_FOLLOW_UP",
+  "DID_NOT_CONNECT",
+  "BAD_LEAD",
+  "SALE_DONE",
+] as const;
+
+export const DATA_SOURCE_VALUES = [
+  "leads_on_demand",
+  "meridian_tower",
+  "eden_park",
+  "varah_swamy",
+  "sarjapur_plots",
+] as const;
+
+/** An imported record plus the AI's 0–100 confidence in the mapping. */
+export interface ExtractedRecord {
+  data: CrmRecord;
+  confidence: number;
+}
+
 export interface SkippedRecord {
   rowIndex: number;
   reason: string;
   raw: RawRow;
+  data: CrmRecord;
+  confidence: number;
 }
 
 export interface ImportSummary {
@@ -42,7 +66,7 @@ export interface ImportSummary {
 }
 
 export interface ImportResult {
-  records: CrmRecord[];
+  records: ExtractedRecord[];
   skipped: SkippedRecord[];
   summary: ImportSummary;
 }
@@ -57,7 +81,7 @@ export interface ParsedCsv {
 /* Streaming (NDJSON) events emitted by the backend. */
 export type StreamEvent =
   | { type: "meta"; totalRows: number; totalBatches: number }
-  | { type: "batch"; index: number; records: CrmRecord[]; skipped: SkippedRecord[] }
+  | { type: "batch"; index: number; records: ExtractedRecord[]; skipped: SkippedRecord[] }
   | { type: "batch_error"; index: number; message: string; skipped: SkippedRecord[] }
   | { type: "done"; summary: ImportSummary }
   | { type: "error"; message: string };

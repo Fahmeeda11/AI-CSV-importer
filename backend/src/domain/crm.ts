@@ -82,11 +82,23 @@ export function emptyCrmRecord(): CrmRecord {
 /** A raw CSV row keyed by its original (arbitrary) header names. */
 export type RawRow = Record<string, string>;
 
-/** A record that was skipped, with the reason and its original data. */
+/** An imported record plus the AI's confidence in the mapping (0–100). */
+export interface ExtractedRecord {
+  data: CrmRecord;
+  confidence: number;
+}
+
+/**
+ * A record that was skipped, with the reason and its original data. Also carries
+ * the AI's best-effort mapping (`data`) so the UI can let a user recover the row
+ * by supplying a missing contact.
+ */
 export interface SkippedRecord {
   rowIndex: number;
   reason: string;
   raw: RawRow;
+  data: CrmRecord;
+  confidence: number;
 }
 
 /** Aggregate summary returned at the end of an import. */
@@ -100,7 +112,7 @@ export interface ImportSummary {
 
 /** Full (non-streaming) import response. */
 export interface ImportResult {
-  records: CrmRecord[];
+  records: ExtractedRecord[];
   skipped: SkippedRecord[];
   summary: ImportSummary;
 }
@@ -118,7 +130,7 @@ export interface StreamMetaEvent {
 export interface StreamBatchEvent {
   type: "batch";
   index: number;
-  records: CrmRecord[];
+  records: ExtractedRecord[];
   skipped: SkippedRecord[];
 }
 

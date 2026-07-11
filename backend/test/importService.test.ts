@@ -20,6 +20,7 @@ function fakeClient(behavior?: { throwAlways?: boolean }): OpenAI {
       return {
         ...base,
         source_index: r.source_index,
+        confidence: 90,
         name: r.name ?? "",
         email: r.email ?? "",
         mobile_without_country_code: r.mobile ?? "",
@@ -45,7 +46,8 @@ describe("runImport", () => {
     expect(result.summary.totalRows).toBe(3);
     expect(result.summary.imported).toBe(2);
     expect(result.summary.skipped).toBe(1);
-    expect(result.records.map((r) => r.name)).toEqual(["Alice", "Cara"]);
+    expect(result.records.map((r) => r.data.name)).toEqual(["Alice", "Cara"]);
+    expect(result.records[0]!.confidence).toBe(90);
     expect(result.skipped[0]!.raw.name).toBe("Bob");
   });
 

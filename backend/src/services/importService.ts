@@ -2,12 +2,13 @@ import type OpenAI from "openai";
 import { env } from "../config/env.js";
 import { chunk, mapWithConcurrency } from "../lib/batch.js";
 import { logger } from "../lib/logger.js";
-import type {
-  CrmRecord,
-  ImportResult,
-  RawRow,
-  SkippedRecord,
-  StreamEvent,
+import {
+  emptyCrmRecord,
+  type ExtractedRecord,
+  type ImportResult,
+  type RawRow,
+  type SkippedRecord,
+  type StreamEvent,
 } from "../domain/crm.js";
 import { extractBatch } from "./aiService.js";
 import { normalizeRecord } from "./crmService.js";
@@ -56,6 +57,8 @@ export async function streamImport(
         rowIndex: b.index,
         reason: `AI batch failed: ${message}`,
         raw: b.raw,
+        data: emptyCrmRecord(),
+        confidence: 0,
       }));
       skipped += skippedRecords.length;
       emit({ type: "batch_error", index: batchIndex, message, skipped: skippedRecords });
@@ -76,7 +79,7 @@ export async function streamImport(
 
 /** Aggregate variant: run the same pipeline and collect a single result. */
 export async function runImport(rows: RawRow[], deps: ImportDeps = {}): Promise<ImportResult> {
-  const records: CrmRecord[] = [];
+  const records: ExtractedRecord[] = [];
   const skipped: SkippedRecord[] = [];
   let summary: ImportResult["summary"] = {
     totalRows: rows.length,
@@ -106,20 +109,23 @@ async function processBatch(
   batch: IndexedRow[],
   batchIndex: number,
   deps: ImportDeps
-): Promise<{ records: CrmRecord[]; skippedRecords: SkippedRecord[] }> {
+): Promise<{ records: ExtractedRecord[]; skippedRecords: SkippedRecord[] }> {
   const mapped = await extractBatch(
     batch.map((b) => b.raw),
     batchIndex,
     deps
   );
 
-  const records: CrmRecord[] = [];
+  const records: ExtractedRecord[] = [];
   const skippedRecords: SkippedRecord[] = [];
 
   batch.forEach((row, localIdx) => {
     const result = normalizeRecord(mapped[localIdx] ?? {}, row.raw, row.index);
-    if (result.kind === "record") records.push(result.record);
-    else skippedRecords.push(result.skipped);
+    if (result.kind === "record") {
+      records.push({ data: result.record, confidence: result.confidence });
+    } else {
+      skippedRecords.push(result.skipped);
+    }
   });
 
   return { records, skippedRecords };

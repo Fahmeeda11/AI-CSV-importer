@@ -11,7 +11,7 @@ import {
 
 /** Result of normalizing a single AI-mapped record. */
 export type NormalizeResult =
-  | { kind: "record"; record: CrmRecord }
+  | { kind: "record"; record: CrmRecord; confidence: number }
   | { kind: "skipped"; skipped: SkippedRecord };
 
 const EMAIL_RE = /[^\s,;<>()"']+@[^\s,;<>()"']+\.[^\s,;<>()"']+/g;
@@ -28,7 +28,7 @@ const PHONE_RE = /\+?\d[\d\s\-().]{5,}\d/g;
  *   - records with neither email nor mobile are skipped
  */
 export function normalizeRecord(
-  aiRecord: Partial<Record<CrmField, unknown>>,
+  aiRecord: Partial<Record<CrmField, unknown>> & { confidence?: unknown },
   raw: RawRow,
   rowIndex: number
 ): NormalizeResult {
@@ -36,6 +36,7 @@ export function normalizeRecord(
   for (const field of CRM_FIELDS) {
     record[field] = toStr(aiRecord[field]);
   }
+  const confidence = clampConfidence(aiRecord.confidence);
 
   const noteExtras: string[] = [];
 
@@ -84,11 +85,13 @@ export function normalizeRecord(
         rowIndex,
         reason: "No email or mobile number found.",
         raw,
+        data: record,
+        confidence,
       },
     };
   }
 
-  return { kind: "record", record };
+  return { kind: "record", record, confidence };
 }
 
 /* ----------------------------- helpers ----------------------------- */
@@ -97,6 +100,13 @@ function toStr(v: unknown): string {
   if (v == null) return "";
   if (typeof v === "string") return v.trim();
   return String(v).trim();
+}
+
+/** Coerce the model's confidence into an integer in [0, 100]; default 50. */
+function clampConfidence(v: unknown): number {
+  const n = typeof v === "number" ? v : Number(v);
+  if (!Number.isFinite(n)) return 50;
+  return Math.max(0, Math.min(100, Math.round(n)));
 }
 
 function extractAll(value: string, re: RegExp): string[] {

@@ -12,8 +12,11 @@ import { getOpenAI } from "../lib/openaiClient.js";
 import { withRetry } from "../lib/retry.js";
 import { logger } from "../lib/logger.js";
 
-/** One AI-mapped row: every CRM field plus the index of its source row. */
-export type AiMappedRow = { source_index: number } & Record<CrmField, string>;
+/**
+ * One AI-mapped row: every CRM field, the index of its source row, and a
+ * 0–100 confidence in how well the source columns matched the CRM schema.
+ */
+export type AiMappedRow = { source_index: number; confidence: number } & Record<CrmField, string>;
 
 /**
  * Map a batch of raw CSV rows onto the GrowEasy CRM schema using the LLM.
@@ -81,11 +84,18 @@ function alignToRows(mapped: AiMappedRow[], rows: RawRow[]): AiMappedRow[] {
     if (!byIndex.has(idx)) byIndex.set(idx, m);
   });
 
-  return rows.map((_row, i) => {
+  return rows.map((_row, i): AiMappedRow => {
     const found = byIndex.get(i) ?? mapped[i];
-    if (found) return { ...found, source_index: i };
+    if (found) {
+      return {
+        ...blankFields(),
+        ...found,
+        source_index: i,
+        confidence: typeof found.confidence === "number" ? found.confidence : 0,
+      };
+    }
     // Model omitted this row entirely — emit blanks; the normalizer will skip it.
-    return { source_index: i, ...blankFields() };
+    return { source_index: i, confidence: 0, ...blankFields() };
   });
 }
 
@@ -149,9 +159,13 @@ MAPPING RULES:
    information that does not fit another field.
 8. Keep every value on a single line — replace any internal newlines with a space or "\\n".
 9. Do NOT invent data. Only map what is present in the row.
+10. confidence: an INTEGER 0-100 for how confident you are in THIS row's overall mapping. Judge by
+    how clearly the source columns matched CRM fields and how clean the values were. Use ~90-100 for
+    obvious, well-labelled data; ~60-85 when you had to infer column meaning; ~0-50 when columns were
+    ambiguous, sparse, or messy.
 
-Return an object: { "records": [ { "source_index": <int>, ...all fields... }, ... ] } with one
-entry per input row.`;
+Return an object: { "records": [ { "source_index": <int>, "confidence": <int>, ...all fields... }, ... ] }
+with one entry per input row.`;
 
 /** JSON Schema for OpenAI Structured Outputs (strict: all fields required). */
 export const RESPONSE_SCHEMA = {
@@ -165,9 +179,10 @@ export const RESPONSE_SCHEMA = {
         additionalProperties: false,
         properties: {
           source_index: { type: "integer" },
+          confidence: { type: "integer" },
           ...Object.fromEntries(CRM_FIELDS.map((f) => [f, { type: "string" }])),
         },
-        required: ["source_index", ...CRM_FIELDS],
+        required: ["source_index", "confidence", ...CRM_FIELDS],
       },
     },
   },

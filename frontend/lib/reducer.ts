@@ -1,11 +1,11 @@
-import type { CrmRecord, ImportSummary, ParsedCsv, SkippedRecord } from "./types";
+import type { ExtractedRecord, ImportSummary, ParsedCsv, SkippedRecord } from "./types";
 
 export type Phase = "idle" | "previewing" | "processing" | "done" | "error";
 
 export interface ImportState {
   phase: Phase;
   parsed: ParsedCsv | null;
-  records: CrmRecord[];
+  records: ExtractedRecord[];
   skipped: SkippedRecord[];
   summary: ImportSummary | null;
   /** Batches completed so far / expected total, for the progress bar. */
@@ -32,7 +32,7 @@ export type Action =
   | { type: "RESET" }
   | { type: "START_PROCESSING" }
   | { type: "META"; totalRows: number; totalBatches: number }
-  | { type: "BATCH"; records: CrmRecord[]; skipped: SkippedRecord[] }
+  | { type: "BATCH"; records: ExtractedRecord[]; skipped: SkippedRecord[] }
   | { type: "DONE"; summary: ImportSummary }
   | { type: "ERROR"; message: string };
 

@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { importReducer, initialState } from "@/lib/reducer";
-import { CRM_FIELDS, type CrmRecord } from "@/lib/types";
+import { CRM_FIELDS, type CrmRecord, type ExtractedRecord } from "@/lib/types";
 
-const rec = (name: string): CrmRecord =>
-  ({ ...Object.fromEntries(CRM_FIELDS.map((f) => [f, ""])), name }) as CrmRecord;
+const rec = (name: string): ExtractedRecord => ({
+  data: { ...Object.fromEntries(CRM_FIELDS.map((f) => [f, ""])), name } as CrmRecord,
+  confidence: 90,
+});
 
 describe("importReducer", () => {
   it("moves to previewing when a preview is ready", () => {
@@ -19,7 +21,9 @@ describe("importReducer", () => {
     s = importReducer(s, {
       type: "BATCH",
       records: [rec("A")],
-      skipped: [{ rowIndex: 1, reason: "no contact", raw: {} }],
+      skipped: [
+        { rowIndex: 1, reason: "no contact", raw: {}, data: rec("").data, confidence: 0 },
+      ],
     });
     s = importReducer(s, { type: "BATCH", records: [rec("B")], skipped: [] });
     expect(s.records).toHaveLength(2);
