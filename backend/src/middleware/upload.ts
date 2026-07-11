@@ -2,11 +2,7 @@ import multer from "multer";
 import type { Request } from "express";
 import { env } from "../config/env.js";
 
-/**
- * In-memory multipart upload for a single CSV file (`file` field).
- * Size-limited; we keep the buffer in memory since files are small and the
- * service is stateless (no disk persistence needed).
- */
+
 export const uploadCsv = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: env.MAX_FILE_MB * 1024 * 1024, files: 1 },

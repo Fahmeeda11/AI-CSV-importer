@@ -37,12 +37,7 @@ const FIELD_W = 172;
 const ACTION_W = 120;
 const ROW_H = 52;
 
-/**
- * Editable results grid: sticky header, horizontal + vertical scroll, virtualized
- * rows. Every CRM field is editable inline (status/source as colored dropdowns),
- * with a read-only confidence badge. In "skipped" mode it also shows the skip
- * reason and a Recover action (enabled once the row has an email or mobile).
- */
+
 export function EditableRecordTable({
   rows,
   onEdit,

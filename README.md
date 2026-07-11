@@ -8,7 +8,7 @@ business rules hold.
 
 > **Position applied for:** Software Developer Intern
 
-**Live app:** https://ai-csv-importer-eta.vercel.app · **API:** https://groweasy-csv-importer-api-rlgs.onrender.com
+**Live app:** https://ai-csv-importer-eta.vercel.app ·
 
 ---
 
@@ -190,6 +190,3 @@ Base URL: `NEXT_PUBLIC_API_URL` (default `http://localhost:4000`).
 Core: arbitrary-column upload · client preview (sticky headers, scroll) · confirm gate ·
 batched AI extraction · structured JSON · imported/skipped/totals.
 
-Bonus: ✅ drag & drop · ✅ progress indicator · ✅ streaming / incremental results ·
-✅ retry for failed AI batches · ✅ virtualized table · ✅ dark mode · ✅ unit tests ·
-✅ Docker · ✅ deployment config · ✅ this README.

@@ -14,7 +14,7 @@ function requireFile(req: Request): Buffer {
   return req.file.buffer;
 }
 
-/** POST /api/import — parse + AI-extract, return the full result as JSON. */
+// POST /api/import — parse + AI-extract, return the full result as JSON.
 export async function importCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     if (!isAiConfigured()) throw new AiNotConfiguredError();
@@ -26,10 +26,7 @@ export async function importCsv(req: Request, res: Response, next: NextFunction)
   }
 }
 
-/**
- * POST /api/import/stream — parse + AI-extract, streaming NDJSON events so the
- * client can render progress and rows incrementally.
- */
+
 export async function importCsvStream(
   req: Request,
   res: Response,

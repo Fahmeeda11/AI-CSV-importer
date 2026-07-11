@@ -12,16 +12,16 @@ import { getOpenAI } from "../lib/openaiClient.js";
 import { withRetry } from "../lib/retry.js";
 import { logger } from "../lib/logger.js";
 
-/**
- * One AI-mapped row: every CRM field, the index of its source row, and a
- * 0–100 confidence in how well the source columns matched the CRM schema.
- */
+/*
+One AI-mapped row: every CRM field, the index of its source row, and a
+0–100 confidence in how well the source columns matched the CRM schema.
+*/
 export type AiMappedRow = { source_index: number; confidence: number } & Record<CrmField, string>;
 
-/**
- * Map a batch of raw CSV rows onto the GrowEasy CRM schema using the LLM.
- * Returns one mapped object per input row (aligned via `source_index`).
- * A client can be injected for testing; production uses the shared singleton.
+/*
+Map a batch of raw CSV rows onto the GrowEasy CRM schema using the LLM.
+Returns one mapped object per input row (aligned via `source_index`).
+A client can be injected for testing; production uses the shared singleton.
  */
 export async function extractBatch(
   rows: RawRow[],
@@ -72,10 +72,10 @@ export async function extractBatch(
   return alignToRows(mapped, rows);
 }
 
-/**
- * Guard against the model dropping or reordering rows: rebuild the array so
- * there is exactly one entry per input row, in order, using `source_index`
- * when present and falling back to position.
+/*
+Guard against the model dropping or reordering rows: rebuild the array so
+there is exactly one entry per input row, in order, using `source_index`
+when present and falling back to position.
  */
 function alignToRows(mapped: AiMappedRow[], rows: RawRow[]): AiMappedRow[] {
   const byIndex = new Map<number, AiMappedRow>();
@@ -120,7 +120,7 @@ function errMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-/* --------------------------- prompt + schema --------------------------- */
+// prompt and schema
 
 const FIELD_DOC = CRM_FIELDS.map((f) => `- ${f}: ${CRM_FIELD_DESCRIPTIONS[f]}`).join("\n");
 
@@ -167,7 +167,7 @@ MAPPING RULES:
 Return an object: { "records": [ { "source_index": <int>, "confidence": <int>, ...all fields... }, ... ] }
 with one entry per input row.`;
 
-/** JSON Schema for OpenAI Structured Outputs (strict: all fields required). */
+// JSON Schema for OpenAI Structured Outputs (strict: all fields required).
 export const RESPONSE_SCHEMA = {
   type: "object",
   additionalProperties: false,

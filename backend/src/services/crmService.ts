@@ -9,7 +9,7 @@ import {
   type SkippedRecord,
 } from "../domain/crm.js";
 
-/** Result of normalizing a single AI-mapped record. */
+// Result of normalizing a single AI-mapped record.
 export type NormalizeResult =
   | { kind: "record"; record: CrmRecord; confidence: number }
   | { kind: "skipped"; skipped: SkippedRecord };
@@ -18,15 +18,7 @@ const EMAIL_RE = /[^\s,;<>()"']+@[^\s,;<>()"']+\.[^\s,;<>()"']+/g;
 // Phone-like tokens: optional +, then 7+ digits possibly separated by spaces/-/()/./
 const PHONE_RE = /\+?\d[\d\s\-().]{5,}\d/g;
 
-/**
- * Deterministic post-processor over the AI's best-effort mapping. This is the
- * safety net that GUARANTEES the assignment rules hold even if the model slips:
- *   - closed enums coerced to an allowed value or left blank
- *   - `created_at` kept only if `new Date()` can parse it
- *   - first email/mobile kept; extras appended to `crm_note`
- *   - newlines escaped so each record stays one valid CSV row
- *   - records with neither email nor mobile are skipped
- */
+
 export function normalizeRecord(
   aiRecord: Partial<Record<CrmField, unknown>> & { confidence?: unknown },
   raw: RawRow,
@@ -40,7 +32,7 @@ export function normalizeRecord(
 
   const noteExtras: string[] = [];
 
-  // --- Emails: keep the first, push the rest to notes ---
+  // Emails: keep the first, push the rest to notes
   const emails = dedupe(extractAll(record.email, EMAIL_RE));
   if (emails.length > 0) {
     record.email = emails[0]!;
@@ -50,7 +42,7 @@ export function normalizeRecord(
     record.email = record.email.includes("@") ? record.email.trim() : "";
   }
 
-  // --- Mobiles: keep the first, push the rest to notes ---
+  // Mobiles: keep the first, push the rest to notes
   const mobiles = dedupe(extractAll(record.mobile_without_country_code, PHONE_RE).map(cleanPhone));
   if (mobiles.length > 0) {
     record.mobile_without_country_code = mobiles[0]!;
@@ -59,25 +51,25 @@ export function normalizeRecord(
     record.mobile_without_country_code = "";
   }
 
-  // --- Closed enums ---
+  // Closed enums
   record.crm_status = coerceStatus(record.crm_status);
   record.data_source = coerceEnum(record.data_source, DATA_SOURCE_VALUES);
 
-  // --- Date must be JS-parseable, else blank ---
+  // Date must be JS-parseable, else blank
   record.created_at = normalizeDate(record.created_at);
 
-  // --- Country code sanity: keep a leading + and digits ---
+  // Country code sanity: keep a leading + and digits
   record.country_code = normalizeCountryCode(record.country_code);
 
-  // --- Fold extras into crm_note (and drop empty "Label:" fragments) ---
+  // Fold extras into crm_note (and drop empty "Label:" fragments)
   record.crm_note = cleanNote(joinNote(record.crm_note, noteExtras));
 
-  // --- CSV-safety: collapse newlines to the literal escape "\n" ---
+  // CSV-safety: collapse newlines to the literal escape "\n" 
   for (const field of CRM_FIELDS) {
     record[field] = escapeNewlines(record[field]);
   }
 
-  // --- Skip rule: neither email nor mobile ---
+  // Skip rule: neither email nor mobile
   if (!record.email && !record.mobile_without_country_code) {
     return {
       kind: "skipped",
@@ -94,7 +86,7 @@ export function normalizeRecord(
   return { kind: "record", record, confidence };
 }
 
-/* ----------------------------- helpers ----------------------------- */
+// helpers
 
 function toStr(v: unknown): string {
   if (v == null) return "";
@@ -102,7 +94,7 @@ function toStr(v: unknown): string {
   return String(v).trim();
 }
 
-/** Coerce the model's confidence into an integer in [0, 100]; default 50. */
+// Coerce the model's confidence into an integer in [0, 100]; default 50.
 function clampConfidence(v: unknown): number {
   const n = typeof v === "number" ? v : Number(v);
   if (!Number.isFinite(n)) return 50;
@@ -140,7 +132,7 @@ function coerceEnum<T extends readonly string[]>(value: string, allowed: T): str
   return match ?? "";
 }
 
-/** Common status phrasings mapped onto the four allowed CRM statuses. */
+// Common status phrasings mapped onto the four allowed CRM statuses.
 const STATUS_SYNONYMS: Record<string, string> = {
   NOT_CONNECTED: "DID_NOT_CONNECT",
   COULD_NOT_CONNECT: "DID_NOT_CONNECT",
@@ -169,7 +161,7 @@ const STATUS_SYNONYMS: Record<string, string> = {
   CONVERTED: "SALE_DONE",
 };
 
-/** Coerce a status: exact allowed value, then a known synonym, else blank. */
+// Coerce a status: exact allowed value, then a known synonym, else blank.
 function coerceStatus(value: string): string {
   const exact = coerceEnum(value, CRM_STATUS_VALUES);
   if (exact) return exact;
@@ -178,7 +170,7 @@ function coerceStatus(value: string): string {
   return STATUS_SYNONYMS[normalized] ?? "";
 }
 
-/** Keep the original string if `new Date()` accepts it; otherwise blank. */
+// Keep the original string if `new Date()` accepts it; otherwise blank.
 export function normalizeDate(value: string): string {
   if (!value) return "";
   const ts = new Date(value).getTime();
@@ -197,7 +189,7 @@ function joinNote(existing: string, extras: string[]): string {
   return parts.join(" | ");
 }
 
-/** Drop note fragments that are just an empty label like "Alt Phone:". */
+// Drop note fragments that are just an empty label like "Alt Phone:".
 function cleanNote(note: string): string {
   return note
     .split(/\s*\|\s*/)

@@ -23,11 +23,11 @@ export interface ImportDeps {
   client?: OpenAI;
 }
 
-/**
- * Stream an import: parse-to-CRM one batch at a time, emitting NDJSON-friendly
- * events (`meta` -> many `batch`/`batch_error` -> `done`). Batches run with
- * bounded concurrency; a batch that fails after retries surfaces its rows as
- * skipped so no lead is silently lost.
+/*
+ Stream an import: parse-to-CRM one batch at a time, emitting NDJSON-friendly
+ events (`meta` -> many `batch`/`batch_error` -> `done`). Batches run with
+ bounded concurrency; a batch that fails after retries surfaces its rows as
+ skipped so no lead is silently lost.
  */
 export async function streamImport(
   rows: RawRow[],
@@ -77,7 +77,7 @@ export async function streamImport(
   });
 }
 
-/** Aggregate variant: run the same pipeline and collect a single result. */
+// Aggregate variant: run the same pipeline and collect a single result.
 export async function runImport(rows: RawRow[], deps: ImportDeps = {}): Promise<ImportResult> {
   const records: ExtractedRecord[] = [];
   const skipped: SkippedRecord[] = [];

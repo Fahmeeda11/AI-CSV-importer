@@ -4,7 +4,7 @@ import { logger } from "../lib/logger.js";
 import { AiNotConfiguredError } from "../lib/openaiClient.js";
 import { CsvParseError } from "../services/csvService.js";
 
-/** Central error handler mapping known errors to clean HTTP responses. */
+// Central error handler mapping known errors to clean HTTP responses.
 export function errorHandler(
   err: unknown,
   _req: Request,
@@ -38,7 +38,7 @@ export function errorHandler(
   res.status(500).json({ error: "internal_error", message: "Something went wrong." });
 }
 
-/** 404 fallthrough. */
+// 404 fallthrough.
 export function notFound(_req: Request, res: Response): void {
   res.status(404).json({ error: "not_found", message: "Route not found." });
 }

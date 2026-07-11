@@ -8,11 +8,11 @@ export class CsvParseError extends Error {
   }
 }
 
-/**
- * Parse a CSV buffer into an array of raw rows keyed by their original header
- * names. Deliberately tolerant: handles quoted fields, embedded commas/newlines,
- * a UTF-8 BOM, ragged/short rows, and blank lines. We do NOT assume any fixed
- * column names — that mapping is the AI's job downstream.
+/*
+ Parse a CSV buffer into an array of raw rows keyed by their original header
+ names. Deliberately tolerant: handles quoted fields, embedded commas/newlines,
+ a UTF-8 BOM, ragged/short rows, and blank lines. We do NOT assume any fixed
+ column names — that mapping is the AI's job downstream.
  */
 export function parseCsv(buffer: Buffer): RawRow[] {
   const text = stripBom(buffer.toString("utf8"));
@@ -53,10 +53,6 @@ function stripBom(s: string): string {
   return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
 }
 
-/**
- * Ensure header names are usable and unique. Empty headers become `column_N`;
- * duplicates get a numeric suffix so no data is silently overwritten.
- */
 function normalizeHeaders(header: string[]): string[] {
   const seen = new Map<string, number>();
   return header.map((raw, i) => {

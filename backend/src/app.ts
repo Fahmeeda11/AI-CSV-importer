@@ -7,7 +7,7 @@ import { logger } from "./lib/logger.js";
 import { importRouter } from "./routes/import.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 
-/** Assemble the Express application (kept separate from `listen` for testing). */
+// Assemble the Express application (kept separate from `listen` for testing).
 export function createApp() {
   const app = express();
 
